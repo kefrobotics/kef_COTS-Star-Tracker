@@ -1,0 +1,11 @@
+starMatchPixelTol: 9
+min_star_area: 3
+max_star_area: 30
+nmatch: 5
+low_thresh_pxl_intensity: 15
+hi_thresh_pxl_intensity: 255
+
+VERBOSE: True
+data_path: ""
+catalog_path: ""
+cam_config_file: ""
