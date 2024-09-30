@@ -9,3 +9,4 @@ VERBOSE: True
 data_path: ""
 catalog_path: ""
 cam_config_file: ""
+darkframe_file: ""
