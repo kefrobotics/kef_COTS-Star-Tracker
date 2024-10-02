@@ -3,6 +3,8 @@ kef_env already has most of what we need installed.
 To finish installation, source kef_env and run the script `kef_install.py`. 
 You might need to then restart your computer.
 
+The source for this repo will likely end up being directly transferred to the `kef_celestialnav` R&D repository as a submpackage-esque entity once validated here.
+
 
 # COTS Star Tracker README
 
