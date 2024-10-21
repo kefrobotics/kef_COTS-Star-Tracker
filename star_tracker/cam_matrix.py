@@ -44,17 +44,23 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
+import numpy as np
+import os
+import json
+import yaml
+
+import array_transformations as xforms
+
+
 
 ################################
 #SUPPORT FUNCTIONS
 ################################
 def cam_matrix_from_params(dx, dy, up, vp, sk):
-    import numpy as np
     return np.array([[dx, sk, up], [0, dy, vp], [0, 0, 1]])
 
 
 def cam_matrix_inv(c):
-    import numpy as np
     dx = c[0, 0]
     dy = c[1, 1]
     sk = c[0, 1]
@@ -68,9 +74,6 @@ def cam_matrix_inv(c):
 
 
 def cam2fov(cinv, nrow, ncol):
-    import numpy as np
-    import array_transformations as xforms
-
     # get (1,1) pixel in unit vector form
     p1 = xforms.vector_array_transform(cinv, np.ones((3, 1)))
     p1 = p1/xforms.vector_norm(p1)
@@ -81,34 +84,68 @@ def cam2fov(cinv, nrow, ncol):
     return np.arccos(xforms.vector_dot(p1, p2))
 
 
-def read_cam_json(cam_config_file):
-    import numpy as np
-    import os
-    import json
+def read_cam_json(cam_config_file, format="kalibr"):
+
     print("")
     if os.path.exists(cam_config_file):
         # print("reading camera parameters from file...")
-        with open(cam_config_file, "r") as read_file:
+        if format.lower() == "kalibr":
+            with open(cam_config_file, "r") as f:
+                data = yaml.safe_load(f)["cam0"]
 
-            data = json.load(read_file)
+            cam_resolution = np.asarray(data["resolution"], dtype=int)
 
-        cam_resolution = np.array([data["resolution"][0], data["resolution"][1]], dtype=int)  # pixels, [cols, rows]
+            dist_coefs = data["distortion_coeffs"]
+            k_1, k_2 = dist_coefs[:2]
+            p_1, p_2 = dist_coefs[2:]
 
-        # TODO: verify that every coefficient has a corresponding value
-        coeff_names = ['k1', 'k2', 'p1', 'p2', 'k3']
-        k_1, k_2, p_1, p_2, k_3 = [data.get(x) for x in coeff_names]
+            intrinsics = data["intrinsics"]
+            dx = intrinsics[0]
+            dy = intrinsics[1]
+            up = intrinsics[2]
+            vp = intrinsics[3]
+            skew = 0.
 
-        # we use fx/dx and fy/dy interchangeably
-        try:
-            dx = data["dx"]
-            dy = data["dy"]
-        except:
-            dx = data["fx"]
-            dy = data["fy"]
+        elif format.lower() == "kef":
+            with open(cam_config_file, "r") as f:
+                data = yaml.safe_load(f)
 
-        up = data["up"]
-        vp = data["vp"]
-        skew = data["skew"]
+            cam_resolution = np.asarray(data["resolution"], dtype=int)
+
+            dist_coefs = data["distortion_coeffs"]
+            k_1, k_2 = dist_coefs[:2]
+            p_1, p_2 = dist_coefs[2:]
+
+            intrinsics = data["intrinsics"]
+            dx = intrinsics[0]
+            dy = intrinsics[1]
+            up = intrinsics[2]
+            vp = intrinsics[3]
+            skew = 0.
+
+        else:
+            print("Trying to load COST Star Tracker JSON format calibration format...")
+            with open(cam_config_file, "r") as read_file:
+                data = json.load(read_file)
+
+            cam_resolution = np.asarray([data["resolution"][0], data["resolution"][1]], dtype=int)  # pixels, [cols, rows]
+
+            # TODO: verify that every coefficient has a corresponding value
+            coeff_names = ['k1', 'k2', 'p1', 'p2', 'k3']
+            k_1, k_2, p_1, p_2, k_3 = [data.get(x) for x in coeff_names]
+
+            # we use fx/dx and fy/dy interchangeably
+            try:
+                dx = data["dx"]
+                dy = data["dy"]
+
+            except:
+                dx = data["fx"]
+                dy = data["fy"]
+
+            up = data["up"]
+            vp = data["vp"]
+            skew = data["skew"]
 
     else: #TODO one day make assumptions based on input image
         print(cam_config_file)
@@ -128,7 +165,12 @@ def read_cam_json(cam_config_file):
         #skew = 0
 
     # distortion coeffs
-    dist_coefs = np.array([k_1, k_2, p_1, p_2, k_3])
+    if k_3 is not None:
+        dist_coefs = np.array([k_1, k_2, p_1, p_2, k_3])
+
+    else:
+        dist_coefs = np.array([k_1, k_2, p_1, p_2])
+
     dist_coefs[dist_coefs is None] = 0
     # populate camera matrix
     camera_matrix = cam_matrix_from_params(dx, dy, up, vp, skew)
@@ -150,7 +192,6 @@ def fov2sensorArray(fov, f, cam_resolution):
     #         \|/
     #          *
     #       pinhole
-    import numpy as np
     # calculate the pixel sensor array size and pixel size
     sensor_size = 2*f*np.tan(np.radians(fov)/2)
     pixel_pitch = sensor_size/cam_resolution
@@ -158,12 +199,10 @@ def fov2sensorArray(fov, f, cam_resolution):
 
 
 def focallength2fov(f, sensor_size):
-    import numpy as np
     return np.degrees(2*np.arctan(sensor_size/(2*f)))
 
 
 def cam_matrix2sensorArray(camera_matrix, f, cam_resolution):
-    import numpy as np
     #     field-of-view    [in deg ]
     #  ---no of pixels--   [integer]
     #           ---dx---   [unitless] = focal_length/pixel_pitch
@@ -183,5 +222,3 @@ def cam_matrix2sensorArray(camera_matrix, f, cam_resolution):
     sensor_size = pixel_pitch*np.array(cam_resolution).astype(float)
     fov = focallength2fov(f, sensor_size)
     return sensor_size, pixel_pitch, fov
-
-
