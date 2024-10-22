@@ -98,6 +98,7 @@ def read_cam_json(cam_config_file, format="kalibr"):
             dist_coefs = data["distortion_coeffs"]
             k_1, k_2 = dist_coefs[:2]
             p_1, p_2 = dist_coefs[2:]
+            k_3 = None
 
             intrinsics = data["intrinsics"]
             dx = intrinsics[0]
@@ -115,6 +116,7 @@ def read_cam_json(cam_config_file, format="kalibr"):
             dist_coefs = data["distortion_coeffs"]
             k_1, k_2 = dist_coefs[:2]
             p_1, p_2 = dist_coefs[2:]
+            k_3 = None
 
             intrinsics = data["intrinsics"]
             dx = intrinsics[0]

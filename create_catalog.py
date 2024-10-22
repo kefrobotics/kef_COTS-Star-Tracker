@@ -60,6 +60,7 @@ with open(config_path, "r") as fp:
 
 b_thresh = config_dict["b_thresh"]
 cam_config_file = config_dict["cam_config_file"]
+starcat_file = config_dict["starcat_file"]
 save_dir = config_dict["save_directory"]
 
 if cam_config_file == "":
@@ -85,11 +86,8 @@ index_col = 2
 tools_dir = os.path.dirname(os.path.realpath(__file__))
 py_src_dir = os.path.dirname(tools_dir)
 repo_dir = os.path.dirname(py_src_dir)
-starcat_file = os.path.join(repo_dir, os.path.join("data", "starcat.tsv"))
-cam_config_dir = os.path.join(repo_dir, os.path.join("data", "cam_config"))
-cam_config_file = os.path.join(cam_config_dir, cam_config_file)
 
-camera_matrix, cam_resolution, dist_coefs = cam_matrix.read_cam_json(cam_config_file)
+camera_matrix, cam_resolution, dist_coefs = cam_matrix.read_cam_json(cam_config_file, format="kalibr")
 
 nrow = cam_resolution[1]
 ncol = cam_resolution[0]

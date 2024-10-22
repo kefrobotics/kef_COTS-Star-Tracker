@@ -43,7 +43,7 @@ x_cat = np.load(catalog_path / "u.npy")
 indexed_star_pairs = np.load(catalog_path / "indexed_star_pairs.npy")
 
 # Load
-camera_matrix, _, _ = read_cam_json(str(cam_config_file))
+camera_matrix, _, _ = read_cam_json(str(cam_config_file), format="kalibr")
 dx = camera_matrix[0, 0]
 isa_thresh = starMatchPixelTol / dx
 

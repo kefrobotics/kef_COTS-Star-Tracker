@@ -8,5 +8,5 @@ hi_thresh_pxl_intensity: 255
 VERBOSE: True
 data_path: ""
 catalog_path: ""
-cam_config_file: ""
-darkframe_file: ""
+cam_config_file: "/home/jhand/projects/kef_COTS-Star-Tracker/data/cam_config/imx2.yaml"
+darkframe_file: "/home/jhand/projects/kef_COTS-Star-Tracker/data/darkframe.png
